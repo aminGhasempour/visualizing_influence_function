@@ -8,157 +8,146 @@
 #
 
 library(shiny)
+library(shinydashboard)
 
-# Define UI for application that draws a histogram
-shinyUI(fluidPage(
+header <- dashboardHeader(title = "Linjär regression")
 
-    # Application title
-    titlePanel("Visualizing Influence Function"),
-    
-    # Distribution settings
-    fluidRow(
-      
-      column(4,
-          sliderInput(
-            "sliderMeanDistA",
-            "Mean of distribution A",
-            min = -3,
-            max = 3,
-            value = 0,
-            step = 0.1
-          ),
-          
-          sliderInput(
-            "sliderStdDistA",
-            "Std of distribution A",
-            min = 0.1,
-            max = 3,
-            value = 0,
-            step = 0.1
-          ),
-      ),
-      
-      column(4, 
-          sliderInput(
-            "sliderMeanDistB",
-            "Mean of distribution B",
-            min = -3,
-            max = 3,
-            value = 0,
-            step = 0.1
-          ),
-          
-          sliderInput(
-            "sliderStdDistB",
-            "Std of distribution B",
-            min = 0.1,
-            max = 3,
-            value = 0,
-            step = 0.1
-          ),
-        ),
-      
-      column(4,
-        sliderInput(
-          "sliderDistributionMix",
-          "Mixing coefficient for data generation",
-          min = 0,
-          max = 1,
-          value = 0,
-          step = 0.1
-        ),
-        
-        sliderInput(
-          "sampleSize",
-          "Sample size",
-          min = 100,
-          max = 100000,
-          value = 100
-        ),
-        
-        actionButton(inputId = "generateButton",
-                     label = "Generate data"),
-      ),
+
+sidebar <- dashboardSidebar(
+  sidebarMenu(
+    menuItem("Data generation", tabName = "tabDataGeneration", icon = icon("th")),
+    menuItem("Influence functions", tabName = "tabInfluenceFunctions", 
+             icon = icon("th"))
+  )
+)
+
+body <- dashboardBody(
+  # Main row, always showing
+  fluidRow(
+    box(title = "Histogram over data", status = "primary", width = 4,
+      plotOutput("dataHistPlot")
     ),
-
-    # Path plot
-    sidebarLayout(
-      sidebarPanel(
-        
-        sliderInput(
-          "epsilon",
-          "Value of epsilon",
-          min = 0,
-          max = 1,
-          value = 0,
-          step = 0.1
-        ),
-        
-        selectInput(
-          inputId = "estimator",
-          label = "Select estimator",
-          choices = list("Mean" = "mean", "Average density" = "avg_den")
-        ),
-        
-      ),
-      
-      # Show a plot of the generated distribution
-      mainPanel(
-        plotOutput(
-          "pathPlot",
-          dblclick = "plot1_dblclick",
-          brush = brushOpts(id = "plot1_brush",
-                            resetOnNew = TRUE)
-        )
+    
+    box(title = "Estimated distribution", status = "primary", width = 4,
+      plotOutput(
+        "pathPlot",
+        dblclick = "plot1_dblclick",
+        brush = brushOpts(id = "plot1_brush",
+                          resetOnNew = TRUE)
       )
-    ), 
+    ),
     
-    sidebarLayout(
-      sidebarPanel(
-        selectInput(
-          inputId = "ndLegendPos",
-          label = "Legend position:",
-          choices = c(
-            "topright",
-            "right",
-            "bottomright",
-            "topleft",
-            "left",
-            "bottomleft",
-            "top",
-            "bottom"
-          ),
-          selected = "topleft"
-        )
-      
-      # Show a plot of the generated distribution
-      ),
-    
-      mainPanel(plotOutput("ndPlot"))
-    ), 
-    
-    sidebarLayout(
-      sidebarPanel(
-        selectInput(
-          inputId = "ifLegendPos",
-          label = "Legend position:",
-          choices = c(
-            "topright",
-            "right",
-            "bottomright",
-            "topleft",
-            "left",
-            "bottomleft",
-            "top",
-            "bottom"
-          ),
-          selected = "topleft"
-        )
-      ),
-      
-      # Show a plot of the generated distribution
-      mainPanel(
-        plotOutput("ifPlot")
+    box(title = "Estimated distribution", status = "warning", width = 2,
+      sliderInput(
+        "epsilon",
+        "Value of epsilon",
+        min = 0,
+        max = 1,
+        value = 0,
+        step = 0.1
       )
     )
-))
+  ),
+  
+  # Tabs
+  tabItems(
+    tabItem("tabDataGeneration",
+      fluidRow(
+        box(title = "Distribution A", status = "warning", width = 4,
+          sliderInput("sliderMeanDistA", "Mean of distribution A", min = -3, 
+                      max = 3, value = 0, step = 0.1),
+          
+          sliderInput("sliderStdDistA", "Std of distribution A", min = 0.1, 
+                      max = 3, value = 0, step = 0.1)
+        ),
+        
+        box(title = "Distribution B", status = "warning", width = 4,
+          sliderInput("sliderMeanDistB", "Mean of distribution B", min = -3, 
+                      max = 3, value = 0, step = 0.1),
+          
+          sliderInput("sliderStdDistB", "Std of distribution B", min = 0.1, 
+                      max = 3, value = 0, step = 0.1)
+        ),
+        
+        box(title = "Generate sample", status = "warning", width = 4,
+          sliderInput("sliderDistributionMix", 
+                      "Mixing coefficient for data generation", min = 0, 
+                      max = 1, value = 0, step = 0.1),
+          
+          sliderInput("sampleSize", "Sample size", min = 100, max = 100000, 
+                      value = 100),
+          
+          actionButton(inputId = "generateButton", label = "Generate data"),
+        )
+      )
+    ), 
+    
+    tabItem("tabInfluenceFunctions",
+      fluidRow(
+        box(title = "Select parameter to estimate", status = "primary", width = 6,
+          selectInput(
+            inputId = "estimator",
+            label = "Select parameter",
+            choices = list("Mean" = "mean", "Average density" = "avg_den")
+          )
+        )
+      ),
+      
+      fluidRow(
+        box(title = "Numerical derivative", status = "primary", width = 6,
+          column(4,
+            selectInput(
+              inputId = "ndLegendPos",
+              label = "Legend position:",
+              choices = c(
+                "topright",
+                "right",
+                "bottomright",
+                "topleft",
+                "left",
+                "bottomleft",
+                "top",
+                "bottom"
+              ),
+              selected = "topleft"
+            )
+                 
+          ),
+          
+          column(8,
+            plotOutput("ndPlot")
+          )
+        ),
+       
+         
+        box(title = "Influence function", status = "primary", width = 6,
+          column(4,
+            selectInput(
+              inputId = "ifLegendPos",
+              label = "Legend position:",
+              choices = c(
+                "topright",
+                "right",
+                "bottomright",
+                "topleft",
+                "left",
+                "bottomleft",
+                "top",
+                "bottom"
+              ),
+              selected = "topleft"
+            )
+                 
+          ),
+          
+          column(8,
+            plotOutput("ifPlot")
+          )
+            
+        )
+      )
+    )
+  )
+)
+
+dashboardPage(header, sidebar, body)

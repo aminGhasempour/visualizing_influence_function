@@ -24,20 +24,18 @@ sidebar <- dashboardSidebar(
 body <- dashboardBody(
   # Main row, always showing
   fluidRow(
-    box(title = "Histogram over data", status = "primary", width = 4,
+    box(title = "Histogram over data", status = "primary", 
       plotOutput("dataHistPlot")
     ),
     
-    box(title = "Estimated distribution", status = "primary", width = 4,
+    box(title = "Estimated distribution", status = "primary", 
       plotOutput(
         "pathPlot",
         dblclick = "plot1_dblclick",
         brush = brushOpts(id = "plot1_brush",
                           resetOnNew = TRUE)
-      )
-    ),
-    
-    box(title = "Estimated distribution", status = "warning", width = 2,
+      ),
+      
       sliderInput(
         "epsilon",
         "Value of epsilon",
@@ -46,7 +44,7 @@ body <- dashboardBody(
         value = 0,
         step = 0.1
       )
-    )
+    ),
   ),
   
   # Tabs
@@ -76,6 +74,9 @@ body <- dashboardBody(
           
           sliderInput("sampleSize", "Sample size", min = 100, max = 100000, 
                       value = 100),
+          
+          sliderInput("sliderEpsMesh", "Epsilon mesh (path granularity)", 
+                      min = 0.01, max = 0.1, value = 0.1, step = 0.01),
           
           actionButton(inputId = "generateButton", label = "Generate data"),
         )

@@ -68,6 +68,12 @@ shinyServer(function(session, input, output) {
   
   
   # Plotting
+  ## Data histogram
+  output$dataHistPlot <- renderPlot({
+    req(data$x)
+    hist(data$x)
+  })
+  
   ## Path plot
   ### Plotting ranges
   pathPlotRanges <- reactiveValues(x = NULL, y = NULL)

@@ -16,10 +16,28 @@ source("color_cycles.R")
 shinyServer(function(session, input, output) {
   
   # Reactive values
-  ## Data generating process
+  ## Data generating process'
   dgps <- reactiveValues(dnorm_mix = NULL,
                          rnorm_mix = NULL)
   
+  ## Data
+  data <- reactiveValues(x = NULL,
+                         eps = NULL,
+                         distribution_distances = NULL,
+                         p_x = NULL,
+                         p_x_tilde = NULL,
+                         p_eps = NULL,
+                         t_values = NULL,
+                         if_values = NULL)
+  
+  ## Estimators
+  estimators <- reactiveValues(mean = NULL, avg_den = NULL,  ate = NULL)
+  
+  ## Influence functions
+  ifs <- reactiveValues(mean = NULL, avg_den = NULL, ate = NULL)
+  
+  # Observes
+  ## Set DGPS
   observe({
     mean_a <- input$sliderMeanDistA
     std_a <- input$sliderStdDistA
@@ -35,37 +53,29 @@ shinyServer(function(session, input, output) {
     }
   })
   
-  ## Data
-  data <- reactiveValues(x = NULL,
-                         epsilon = NULL,
-                         distribution_distances = NULL,
-                         p_x = NULL,
-                         p_x_tilde = NULL,
-                         p_epsilon = NULL,
-                         t_values = NULL,
-                         if_values = NULL)
   
-  
-  # Create DGP and generate data
+  ## Generate data, calculate estimators and influence functions
   observeEvent(input$generateButton, {
+    req(dgps$dnorm_mix, dgps$rnorm_mix)
     
-    showModal(modalDialog("Generating data...", footer=NULL))
+    showModal(modalDialog("Generating data and calculating influence functions...", 
+                          footer=NULL))
     
+    data$eps <- input$sliderEpsMesh
     
-    data_tmp <- data_generating_process(dgps$dnorm_mix, dgps$rnorm_mix, input$sampleSize)
+    data_tmp <- dgp(dgps$dnorm_mix, dgps$rnorm_mix, input$sampleSize)
     
     data$x <- data_tmp$x
-    data$epsilon <- data_tmp$epsilon
-    data$distribution_distances <- data_tmp$distribution_distances
+    data$x_linspace <- data_tmp$x_linspace
     data$p_x <- data_tmp$p_x
     data$p_x_tilde <- data_tmp$p_x_tilde
-    data$p_epsilon <- data_tmp$p_epsilon
-    data$t_values <- data_tmp$t_values
-    data$if_values <- data_tmp$if_values
+    data$dapprox <- data_tmp$dapprox
+    data$deps <- data_tmp$deps
+    
+    ifs_tmp <- calculate_estimators_and_ifs(data$x_linspace, data$eps, 
     
     removeModal()
   })
-  
   
   # Plotting
   ## Data histogram
@@ -96,14 +106,14 @@ shinyServer(function(session, input, output) {
   output$pathPlot <- renderPlot({
     req(data$x, data$p_x, data$p_x_tilde)
     
-    plot_path(data$x, data$p_x, data$p_x_tilde, pathPlotRanges, input$epsilon)    
+    plot_path(data$x, data$p_x, data$p_x_tilde, pathPlotRanges, input$eps)    
   })
   
   ## Numerical derivative
   output$ndPlot <- renderPlot({
     req(data$x, data$p_x, data$p_x_tilde)
     
-    eps <- data$epsilon
+    eps <- data$eps
     t <- data$t_values[[input$estimator]]
     
     # Numerical derivative
@@ -121,7 +131,7 @@ shinyServer(function(session, input, output) {
   output$ifPlot <- renderPlot({
     req(data$x, data$p_x, data$p_x_tilde)
     
-    plot_curve(data$epsilon, 
+    plot_curve(data$eps, 
                data$t_values[[input$estimator]], 
                data$if_values[[input$estimator]], 
                legend_pos = input$ifLegendPos,

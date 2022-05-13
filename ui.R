@@ -22,27 +22,19 @@ sidebar <- dashboardSidebar(
 )
 
 body <- dashboardBody(
+  
   # Main row, always showing
   fluidRow(
     box(title = "Histogram over data", status = "primary", 
       plotOutput("dataHistPlot")
     ),
     
-    box(title = "Estimated distribution", status = "primary", 
+    box(title = "Distribution path", status = "primary", 
       plotOutput(
         "pathPlot",
         dblclick = "plot1_dblclick",
         brush = brushOpts(id = "plot1_brush",
                           resetOnNew = TRUE)
-      ),
-      
-      sliderInput(
-        "epsilon",
-        "Value of epsilon",
-        min = 0,
-        max = 1,
-        value = 0,
-        step = 0.1
       )
     ),
   ),
@@ -56,7 +48,7 @@ body <- dashboardBody(
                       max = 3, value = 0, step = 0.1),
           
           sliderInput("sliderStdDistA", "Std of distribution A", min = 0.1, 
-                      max = 3, value = 0, step = 0.1)
+                      max = 3, value = 1, step = 0.1)
         ),
         
         box(title = "Distribution B", status = "warning", width = 4,
@@ -64,7 +56,7 @@ body <- dashboardBody(
                       max = 3, value = 0, step = 0.1),
           
           sliderInput("sliderStdDistB", "Std of distribution B", min = 0.1, 
-                      max = 3, value = 0, step = 0.1)
+                      max = 3, value = 1, step = 0.1)
         ),
         
         box(title = "Generate sample", status = "warning", width = 4,
@@ -85,7 +77,7 @@ body <- dashboardBody(
     
     tabItem("tabInfluenceFunctions",
       fluidRow(
-        box(title = "Select parameter to estimate", status = "primary", width = 6,
+        box(title = "Select parameter to estimate", status = "primary", width = 12,
           selectInput(
             inputId = "estimator",
             label = "Select parameter",
@@ -96,55 +88,44 @@ body <- dashboardBody(
       
       fluidRow(
         box(title = "Numerical derivative", status = "primary", width = 6,
-          column(4,
-            selectInput(
-              inputId = "ndLegendPos",
-              label = "Legend position:",
-              choices = c(
-                "topright",
-                "right",
-                "bottomright",
-                "topleft",
-                "left",
-                "bottomleft",
-                "top",
-                "bottom"
-              ),
-              selected = "topleft"
-            )
-                 
-          ),
+          plotOutput("ndPlot"),
           
-          column(8,
-            plotOutput("ndPlot")
+          selectInput(
+            inputId = "ndLegendPos",
+            label = "Legend position:",
+            choices = c(
+              "topright",
+              "right",
+              "bottomright",
+              "topleft",
+              "left",
+              "bottomleft",
+              "top",
+              "bottom"
+            ),
+            selected = "topleft"
           )
         ),
        
          
         box(title = "Influence function", status = "primary", width = 6,
-          column(4,
-            selectInput(
-              inputId = "ifLegendPos",
-              label = "Legend position:",
-              choices = c(
-                "topright",
-                "right",
-                "bottomright",
-                "topleft",
-                "left",
-                "bottomleft",
-                "top",
-                "bottom"
-              ),
-              selected = "topleft"
-            )
-                 
-          ),
+          plotOutput("ifPlot"),
           
-          column(8,
-            plotOutput("ifPlot")
+          selectInput(
+            inputId = "ifLegendPos",
+            label = "Legend position:",
+            choices = c(
+              "topright",
+              "right",
+              "bottomright",
+              "topleft",
+              "left",
+              "bottomleft",
+              "top",
+              "bottom"
+            ),
+            selected = "topleft"
           )
-            
         )
       )
     )

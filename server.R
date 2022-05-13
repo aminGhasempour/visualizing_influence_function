@@ -8,9 +8,10 @@
 #
 
 library(shiny)
-source("data_generation.R")
-source("plotting_functions.R")
-source("color_cycles.R")
+source("R/dgps.R")
+source("R/estimators_and_ifs.R")
+source("R/plotting_functions.R")
+source("R/color_cycles.R")
 
 # Define server logic required to draw a histogram
 shinyServer(function(session, input, output) {
@@ -22,13 +23,13 @@ shinyServer(function(session, input, output) {
   
   ## Data
   data <- reactiveValues(x = NULL,
+                         x_linspace = NULL,
                          eps = NULL,
-                         distribution_distances = NULL,
+                         ddistances = NULL,
                          p_x = NULL,
                          p_x_tilde = NULL,
-                         p_eps = NULL,
-                         t_values = NULL,
-                         if_values = NULL)
+                         dtilde = NULL,
+                         dpath = NULL)
   
   ## Estimators
   estimators <- reactiveValues(mean = NULL, avg_den = NULL,  ate = NULL)
@@ -61,18 +62,34 @@ shinyServer(function(session, input, output) {
     showModal(modalDialog("Generating data and calculating influence functions...", 
                           footer=NULL))
     
-    data$eps <- input$sliderEpsMesh
+    # Setting epsilon mesh
+    data$eps <- seq(0, 1, by = input$sliderEpsMesh)
     
-    data_tmp <- dgp(dgps$dnorm_mix, dgps$rnorm_mix, input$sampleSize)
+    # Generating data and distributions
+    tmp <- dgp(input$sampleSize, dgps$dnorm_mix, dgps$rnorm_mix)
     
-    data$x <- data_tmp$x
-    data$x_linspace <- data_tmp$x_linspace
-    data$p_x <- data_tmp$p_x
-    data$p_x_tilde <- data_tmp$p_x_tilde
-    data$dapprox <- data_tmp$dapprox
-    data$deps <- data_tmp$deps
+    # Storing in reactive variable
+    data$x <- tmp$x
+    data$x_linspace <- tmp$x_linspace
+    data$p_x <- tmp$p_x
+    data$p_x_tilde <- tmp$p_x_tilde
+    data$dtilde <- tmp$dtilde
+    data$dpath <- tmp$dpath
     
-    ifs_tmp <- calculate_estimators_and_ifs(data$x_linspace, data$eps, 
+    # Calculating estimators and influence functions
+    tmp <- calculate_estimators_and_ifs(data$x_linspace, data$eps, 
+                                        dgps$dnorm_mix, data$dtilde, data$dpath)
+    print(tmp)
+    
+    # Storing in reactive variables
+    data$ddistances <- tmp$ddistances
+    estimators$mean <- tmp$estimators$mean
+    ifs$mean <- tmp$ifs$mean
+    estimators$avg_den <- tmp$estimators$avg_den
+    ifs$avg_den <- tmp$ifs$avg_den
+    #print(data$ddistances)
+    #print(estimators$mean)
+    #print(ifs$mean)
     
     removeModal()
   })
@@ -85,36 +102,18 @@ shinyServer(function(session, input, output) {
   })
   
   ## Path plot
-  ### Plotting ranges
-  pathPlotRanges <- reactiveValues(x = NULL, y = NULL)
-  
-  observeEvent(input$plot1_dblclick, {
-    req(data$x, data$p_x, data$p_x_tilde)
-    
-    brush <- input$plot1_brush
-    if (!is.null(brush)) {
-      pathPlotRanges$x <- c(brush$xmin, brush$xmax)
-      pathPlotRanges$y <- c(brush$ymin, brush$ymax)
-      
-    } else {
-      pathPlotRanges$x <- c(min(x), max(x))
-      pathPlotRanges$y <- c(min(min(p_x), min(p_x_tilde)),
-                            max(max(p_x), max(p_x_tilde)))
-    }
-  })
-  
   output$pathPlot <- renderPlot({
     req(data$x, data$p_x, data$p_x_tilde)
     
-    plot_path(data$x, data$p_x, data$p_x_tilde, pathPlotRanges, input$eps)    
+    plot_path(data$x_linspace, data$p_x, data$p_x_tilde, path_plot_ranges)
   })
   
   ## Numerical derivative
   output$ndPlot <- renderPlot({
-    req(data$x, data$p_x, data$p_x_tilde)
+    req(data$eps, data$p_x, data$p_x_tilde)
     
-    eps <- data$eps
-    t <- data$t_values[[input$estimator]]
+    eps <- data$ddistances
+    t <- estimators[[input$estimator]]
     
     # Numerical derivative
     dydx <-
@@ -123,20 +122,42 @@ shinyServer(function(session, input, output) {
                t, 
                dydx, 
                legend_pos = input$ndLegendPos, 
-               title = "Numerical derivative based 1-step")
+               xlbl = "Distribution distance",
+               ylbl = input$estimator)
   })
   
   
   ## Influence function
   output$ifPlot <- renderPlot({
+    req(data$eps, data$p_x, data$p_x_tilde)
+    
+    plot_curve(data$ddistances, 
+               estimators[[input$estimator]], 
+               ifs[[input$estimator]], 
+               legend_pos = input$ifLegendPos,
+               xlbl = "Distribution distance",
+               ylbl = input$estimator)
+  })
+  
+  # Brush handlers
+  ## Path plot ranges
+  path_plot_ranges <- reactiveValues(x = NULL, y = NULL)
+  
+  observeEvent(input$plot1_dblclick, {
     req(data$x, data$p_x, data$p_x_tilde)
     
-    plot_curve(data$eps, 
-               data$t_values[[input$estimator]], 
-               data$if_values[[input$estimator]], 
-               legend_pos = input$ifLegendPos,
-               title = "IF based 1-step")
-    
+    brush <- input$plot1_brush
+    if (!is.null(brush)) {
+      path_plot_ranges$x <- c(brush$xmin, brush$xmax)
+      path_plot_ranges$y <- c(brush$ymin, brush$ymax)
+      
+    } else {
+      path_plot_ranges$x <- c(min(data$x), max(data$x))
+      path_plot_ranges$y <- c(min(min(data$p_x), min(data$p_x_tilde)),
+                            max(max(data$p_x), max(data$p_x_tilde)))
+    }
   })
+  
 
 })
+

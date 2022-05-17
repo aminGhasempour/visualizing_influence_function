@@ -1,5 +1,7 @@
 estimator_mean <- function(x, p_x) {
-  return(mean(p_x(x)))
+  avg <- function(x){x * p_x(x)}
+  return(integrate(avg, min(x), max(x))$value)
+  
 }
 if_mean <- function(x, p_x) {
   estimator_val <- estimator_mean(x, p_x)

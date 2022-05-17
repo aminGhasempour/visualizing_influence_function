@@ -1,9 +1,10 @@
 estimator_mean <- function(x, p_x) {
-  return(mean(p_x(x)))
+  avg <- function (x) { x * p_x(x) }
+  return(integrate(avg, min(x), max(x))$value)
 }
 if_mean <- function(x, p_x) {
   estimator_val <- estimator_mean(x, p_x)
-  if_val <- p_x(x) - estimator_val
+  if_val <- x - estimator_val
   return(mean(if_val))
 }
 
@@ -43,36 +44,41 @@ calculate_estimator_along_path <- function(x_linspace, estimator, eps, dpath) {
     p_x <- function(x) {
       dpath(x, ep)
     }
+    print(ep)
     t_eps <- append(t_eps, estimator(x_linspace, p_x))
   }
+  print("Looke heere")
+  print(mean(dpath(x_linspace, 1)))
   
   return(t_eps)
 }
 
-calculate_estimators_and_ifs <- function(x_linspace, eps, dnorm_mix, dtilde, 
+calculate_estimators_and_ifs <- function(x, eps, dnorm_mix, dtilde, 
                                          dpath) {
   # Values of densities along epsilon path
   p_eps <- list()
   # Distribution distances
   ddistances <- c()
   for (ep in eps) {
-    p_eps <- append(p_eps, dpath(x_linspace, ep))
+    p_eps <- append(p_eps, dpath(x, ep))
     
     dist_fun <- function(x) { (dnorm_mix(x) - dpath(x, ep))^2 }
-    dist <- integrate(dist_fun, min(x_linspace), max(x_linspace))$value
+    dist <- integrate(dist_fun, min(x), max(x))$value
     ddistances <- append(ddistances, dist)
   }
   
   # Calculating estimators and influence functions
+  x_linspace <- seq(min(x), max(x), length.out=1000)
   estimator_values <- list()
   if_values <- list()
   for (tn in names(estimators)) {
     t <- estimators[[tn]]
     t_val <- calculate_estimator_along_path(x_linspace, t$estimator, eps, 
                                             dpath)
+    print(t_val)
     estimator_values[[tn]] <- t_val
     
-    if_values[[tn]] <- t$ifn(x_linspace, dtilde)
+    if_values[[tn]] <- t$ifn(x, dtilde)
   }
   
   return(list(ddistances = ddistances,

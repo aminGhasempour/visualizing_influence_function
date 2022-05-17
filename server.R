@@ -58,6 +58,7 @@ shinyServer(function(session, input, output) {
   
   # Observes
   ## Set DGPS
+  ### Move to the dgps.R file
   observe({
     mean_a <- input$sliderMeanDistA
     std_a <- input$sliderStdDistA
@@ -66,10 +67,12 @@ shinyServer(function(session, input, output) {
     d_mix <- input$sliderDistributionMix
     
     dgps$dnorm_mix <-  function(x) {
-      d_mix * dnorm(x, mean_a, std_a) + (1 - d_mix) * dnorm(x, mean_b, std_b)
+      return(d_mix * dnorm(x, mean_a, std_a) + (1 - d_mix) * 
+               dnorm(x, mean_b, std_b))
     }
     dgps$rnorm_mix <-  function(n) {
-      d_mix * rnorm(n, mean_a, std_a) + (1 - d_mix) * rnorm(n, mean_b, std_b)
+      p <- rbinom(n, 1, d_mix)
+      return(p * rnorm(n, mean_a, std_a) + (1 - p) * rnorm(n, mean_b, std_b))
     }
   })
   
@@ -232,7 +235,7 @@ shinyServer(function(session, input, output) {
     str6 <- paste0("Difference true/one-step: ", sprintf("%.3e", 
                                                          diff_true_one_step))
     
-    HTML(paste(str1, str2, str3, str4, str5, sep = "<br/>"))
+    HTML(paste(str1, str2, str3, str4, str5, str6, sep = "<br/>"))
   })
   
 

@@ -10,7 +10,7 @@
 library(shiny)
 library(shinydashboard)
 
-header <- dashboardHeader(title = "Linjär regression")
+header <- dashboardHeader(title = "Visualizing the Influence Function")
 
 
 sidebar <- dashboardSidebar(
@@ -35,7 +35,9 @@ body <- dashboardBody(
         dblclick = "plot1_dblclick",
         brush = brushOpts(id = "plot1_brush",
                           resetOnNew = TRUE)
-      )
+      ),
+      
+      htmlOutput("dataDgpText"),
     ),
   ),
   
@@ -64,68 +66,47 @@ body <- dashboardBody(
                       "Mixing coefficient for data generation", min = 0, 
                       max = 1, value = 0, step = 0.1),
           
-          sliderInput("sampleSize", "Sample size", min = 100, max = 100000, 
-                      value = 100),
+          sliderInput("sampleSize", "Sample size", min = 100, max = 10000, 
+                      value = 100, step = 100),
           
           sliderInput("sliderEpsMesh", "Epsilon mesh (path granularity)", 
-                      min = 0.01, max = 0.1, value = 0.1, step = 0.01),
+                      min = 0.001, max = 0.1, value = 0.01, step = 0.001),
           
-          actionButton(inputId = "generateButton", label = "Generate data"),
+          htmlOutput("currentDgpText"),
+          
+          actionButton(inputId = "generateButton", label = "Generate data")
         )
       )
     ), 
     
     tabItem("tabInfluenceFunctions",
       fluidRow(
-        box(title = "Select parameter to estimate", status = "primary", width = 12,
+        box(title = "Select parameter to estimate", status = "warning", width = 12,
           selectInput(
             inputId = "estimator",
             label = "Select parameter",
             choices = list("Mean" = "mean", "Average density" = "avg_den")
-          )
+          ), 
+          
+          checkboxInput("checkboxDistDist", "Distribution distance", 
+                        value = TRUE)
+          
         )
       ),
       
       fluidRow(
-        box(title = "Numerical derivative", status = "primary", width = 6,
-          plotOutput("ndPlot"),
-          
-          selectInput(
-            inputId = "ndLegendPos",
-            label = "Legend position:",
-            choices = c(
-              "topright",
-              "right",
-              "bottomright",
-              "topleft",
-              "left",
-              "bottomleft",
-              "top",
-              "bottom"
-            ),
-            selected = "topleft"
-          )
+        box(title = "Info", status = "primary", width = 3,
+          htmlOutput("estimatorAndIfText")
         ),
-       
-         
-        box(title = "Influence function", status = "primary", width = 6,
-          plotOutput("ifPlot"),
           
-          selectInput(
-            inputId = "ifLegendPos",
-            label = "Legend position:",
-            choices = c(
-              "topright",
-              "right",
-              "bottomright",
-              "topleft",
-              "left",
-              "bottomleft",
-              "top",
-              "bottom"
-            ),
-            selected = "topleft"
-          )
+        tabBox(title = "One-step estimator", 
+               width = 9,
+               tabPanel("IF based",
+                 plotOutput("ifPlot")
+               ),
+               tabPanel("Numerical derivative based",
+                  plotOutput("ndPlot")
+               )
         )
       )
     )

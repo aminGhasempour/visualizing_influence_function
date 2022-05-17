@@ -1,0 +1,13 @@
+name: visualizing_influence_function
+title: visualizing_influence_function
+username:
+account: fileds
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 6316993
+bundleId: 5914372
+url: https://fileds.shinyapps.io/visualizing_influence_function/
+when: 1652778789.75566
+lastSyncTime: 1652778789.75567
+asMultiple: FALSE
+asStatic: FALSE

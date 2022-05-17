@@ -58,10 +58,7 @@ plot_path <- function(x, p_x, p_x_tilde, ranges, epsilon = seq(0, 1, 0.1)) {
 
 
 # Plotting function for plotting curve of T vs eps
-plot_curve <- function(x, y, dydx, legend_pos, ylbl, xlbl="epsilon") {
-  # Linear approximation
-  y_line <- tail(y, 1) + dydx*(max(x) - x)
-  
+plot_curve <- function(x, y, one_step, legend_pos, ylbl, xlbl="epsilon") {
   # col1: true curve, col2: linear approximation
   col1 = tableau20[1]
   col2 = tableau20[5]
@@ -74,14 +71,14 @@ plot_curve <- function(x, y, dydx, legend_pos, ylbl, xlbl="epsilon") {
        ylab=ylbl,
        xlab=xlbl,
        xlim=c(min(x) - 0.005 * max(x), max(x) + 0.005 * max(x)),
-       ylim=c(min(min(y), min(y_line)), max(max(y), max(y_line))),
+       ylim=c(min(min(y), one_step), max(max(y), one_step)),
        xaxs="i",
        yaxt = "n")
   
   # Show y ticks at the three relevant places
   axis(2,
-       at = c(tail(y, 1), y_line[1], head(y, 1)),
-       labels = round(c(tail(y, 1), y_line[1], head(y, 1)), digits=3))
+       at = c(tail(y, 1), one_step, head(y, 1)),
+       labels = round(c(tail(y, 1), one_step, head(y, 1)), digits=3))
   
   # Plot points at T(P) and T(P~)
   points(c(min(x), max(x)), 
@@ -91,14 +88,15 @@ plot_curve <- function(x, y, dydx, legend_pos, ylbl, xlbl="epsilon") {
          cex=2)
   
   # Plot linear approximation
-  lines(x, y_line,
+  lines(c(min(x), max(x)), 
+        c(one_step, tail(y, 1)),
         col=col2,
         lwd=2,
         lty=2)
   
   # Plot points at T(P) and T(P~)
   points(c(min(x), max(x)), 
-         c(y_line[1], tail(y_line, 1)), 
+         c(one_step, tail(y, 1)), 
          col = col2,
          pch=20,
          cex=2)

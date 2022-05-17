@@ -226,16 +226,17 @@ shinyServer(function(session, input, output) {
     diff_true_est <- abs(t_est - t_true)
     diff_true_one_step <- abs(t_one_step - t_true)
         
-    str1 <- paste0("Estimator value: ", sprintf("%.6f", t_est))
-    str2 <- paste0("True estimator value: ", sprintf("%.6f", t_true))
+    str1 <- paste0("Estimator value (T(P_tilde)): ", sprintf("%.6f", t_est))
+    str2 <- paste0("True estimator value (T(P)): ", sprintf("%.6f", t_true))
     str3 <- paste0("IF value: ", sprintf("%.6f", if_val))
     str4 <- paste0("One-step value: ", sprintf("%.6f", t_one_step))
     str5 <- paste0("Difference true/estimate: ", sprintf("%.3e", 
                                                          diff_true_est))
     str6 <- paste0("Difference true/one-step: ", sprintf("%.3e", 
                                                          diff_true_one_step))
+    str7 <- paste0("Sample mean: ", sprintf("%.6f", mean(data$x)))
     
-    HTML(paste(str1, str2, str3, str4, str5, str6, sep = "<br/>"))
+    HTML(paste(str1, str2, str3, str4, str5, str6, str7, sep = "<br/>"))
   })
   
 

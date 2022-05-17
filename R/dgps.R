@@ -14,7 +14,7 @@ dgp <- function(n, dnorm_mix, rnorm_mix) {
   
   # Distributions along epsilon
   dpath <- function(x, eps) {
-    eps * dnorm_mix(x) + (1 - eps) * dtilde(x)
+    (1 - eps) * dnorm_mix(x) + eps * dtilde(x)
   }
   
   return(list(x = x,

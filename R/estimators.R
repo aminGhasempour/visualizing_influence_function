@@ -50,6 +50,7 @@ calculate_estimator_along_path <- function(x_linspace, estimator, eps, dpath) {
   return(t_eps)
 }
 
+# TODO: Separate calculation of influence function from this loop
 calculate_estimators_and_ifs <- function(x, eps, dnorm_mix, dtilde, 
                                          dpath) {
   # Values of densities along epsilon path

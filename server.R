@@ -9,8 +9,8 @@
 
 library(shiny)
 source("R/dgps.R")
-source("R/estimators_and_ifs.R")
-source("R/plotting_functions.R")
+source("R/estimators.R")
+source("R/plotting.R")
 source("R/color_cycles.R")
 
 set.seed(42)
@@ -137,7 +137,7 @@ shinyServer(function(session, input, output) {
     }
     else {
       x <- data$eps
-      xlbl <- "Epsilon"
+      xlbl <- "Path along epsilon/t"
     }
     
     # Calculating numerical derivative
@@ -165,7 +165,7 @@ shinyServer(function(session, input, output) {
     }
     else {
       x <- data$eps
-      xlbl <- "Epsilon"
+      xlbl <- "Path along epsilon/t"
     }
     
     # Calculating one step
@@ -219,6 +219,11 @@ shinyServer(function(session, input, output) {
   
   ## Estimator and IF
   output$estimatorAndIfText <- renderUI({
+    x_bar <- mean(data$x)
+    mean_fun <- function(x) { x * dgps$dnorm_mix(x) }
+    mean_true <- integrate(mean_fun, -1000, 1000)$value
+    avg_den_fun <- function(x) { dgps$dnorm_mix(x)^2 }
+    avg_den_true <- integrate(avg_den_fun, -1000, 1000)$value
     t_est <- tail(estimators[[input$estimator]], 1)
     t_true <- head(estimators[[input$estimator]], 1)
     if_val <- ifs[[input$estimator]]
@@ -226,15 +231,20 @@ shinyServer(function(session, input, output) {
     diff_true_est <- abs(t_est - t_true)
     diff_true_one_step <- abs(t_one_step - t_true)
         
-    str1 <- paste0("Estimator value (T(P_tilde)): ", sprintf("%.6f", t_est))
-    str2 <- paste0("True estimator value (T(P)): ", sprintf("%.6f", t_true))
-    str3 <- paste0("IF value: ", sprintf("%.6f", if_val))
-    str4 <- paste0("One-step value: ", sprintf("%.6f", t_one_step))
-    str5 <- paste0("Difference true/estimate: ", sprintf("%.3e", 
+    if (input$estimator == "mean") {
+      str1 <- sprintf("Sample mean =  %.6f<br/>True mean = %.6f", x_bar, mean_true)
+    }
+    else if (input$estimator == "avg_den") {
+      str1 <- sprintf("True avg density = %.6f", avg_den_true)
+    }
+    str2 <- paste0("T(P) (sample) = ", sprintf("%.6f", t_true))
+    str3 <- paste0("T(P_tilde) = ", sprintf("%.6f", t_est))
+    str4 <- paste0("T_one-step = ", sprintf("%.6f", t_one_step))
+    str5 <- paste0("IF = ", sprintf("%.6f", if_val))
+    str6 <- paste0("|T(P) - T(P_tilde)| = ", sprintf("%.3e", 
                                                          diff_true_est))
-    str6 <- paste0("Difference true/one-step: ", sprintf("%.3e", 
+    str7 <- paste0("|T(P) - T_one-step| = ", sprintf("%.3e", 
                                                          diff_true_one_step))
-    str7 <- paste0("Sample mean: ", sprintf("%.6f", mean(data$x)))
     
     HTML(paste(str1, str2, str3, str4, str5, str6, str7, sep = "<br/>"))
   })

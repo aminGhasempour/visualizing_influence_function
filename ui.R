@@ -17,7 +17,8 @@ sidebar <- dashboardSidebar(
   sidebarMenu(
     menuItem("Data generation", tabName = "tabDataGeneration", icon = icon("th")),
     menuItem("Influence functions", tabName = "tabInfluenceFunctions", 
-             icon = icon("th"))
+             icon = icon("th")),
+    actionButton(inputId = "generateButton", label = "Generate data")
   )
 )
 
@@ -66,15 +67,14 @@ body <- dashboardBody(
                       "Mixing coefficient for data generation", min = 0, 
                       max = 1, value = 0.5, step = 0.1),
           
-          sliderInput("sampleSize", "Sample size", min = 100, max = 10000, 
-                      value = 100, step = 100),
+          sliderInput("sampleSize", "Sample size", min = 10, max = 1000, 
+                      value = 100, step = 10),
           
           sliderInput("sliderEpsMesh", "Epsilon mesh (path granularity)", 
                       min = 0.001, max = 0.1, value = 0.01, step = 0.001),
           
-          htmlOutput("currentDgpText"),
+          htmlOutput("currentDgpText")
           
-          actionButton(inputId = "generateButton", label = "Generate data")
         )
       )
     ), 

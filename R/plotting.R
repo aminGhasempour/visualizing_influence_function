@@ -58,10 +58,11 @@ plot_path <- function(x, p_x, p_x_tilde, ranges, epsilon = seq(0, 1, 0.1)) {
 
 
 # Plotting function for plotting curve of T vs eps
-plot_curve <- function(x, y, one_step, legend_pos, ylbl, xlbl="epsilon") {
+plot_curve <- function(x, y, one_step, k_fold = NULL, legend_pos, ylbl, xlbl="epsilon") {
   # col1: true curve, col2: linear approximation
   col1 = tableau20[1]
   col2 = tableau20[5]
+  col3 = tableau20[6]
   
   # Plot the true curve
   plot(x, y,
@@ -79,11 +80,12 @@ plot_curve <- function(x, y, one_step, legend_pos, ylbl, xlbl="epsilon") {
   # Show y ticks at the three relevant places
   axis(2,
        at = c(tail(y, 1), one_step, head(y, 1)),
-       labels = round(c(tail(y, 1), one_step, head(y, 1)), digits=3))
+       labels = round(c(tail(y, 1), one_step, head(y, 1)), digits=3), 
+       las=1)
   
   # Plot points at T(P) and T(P~)
-  points(c(min(x), max(x)), 
-         c(y[1], tail(y, 1)),
+  points(c(max(x)), 
+         c(tail(y, 1)),
          col=col1,
          pch=19,
          cex=2)
@@ -95,17 +97,26 @@ plot_curve <- function(x, y, one_step, legend_pos, ylbl, xlbl="epsilon") {
         lwd=2,
         lty=2)
   
-  # Plot points at T(P) and T(P~)
-  points(c(min(x), max(x)), 
-         c(one_step, tail(y, 1)), 
-         col = col2,
-         pch=20,
-         cex=2)
+  # Plot one-step k-fold
+  if (!is.null(k_fold)) {
+    lines(c(min(x), max(x)), 
+          c(k_fold, tail(y, 1)),
+          col=col3,
+          lwd=2,
+          lty=2)
+    legend("right",
+           legend = c("True curve", "One-step", "One-step k-fold"),  # Legend texts
+           col = c(col1, col2, col3),
+           lty=c(1,2,2),
+           lwd=2
+    )
+  } else {
+    legend("right",
+           legend = c("True curve", "One-step"),  # Legend texts
+           col = c(col1, col2),
+           lty=c(1,2),
+           lwd=2
+    )
+  }
   
-  legend("right",
-         legend = c("True curve", "One-step"),  # Legend texts
-         col = c(col1, col2),
-         lty=c(1,2),
-         lwd=2
-  )
 }

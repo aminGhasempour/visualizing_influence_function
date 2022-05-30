@@ -19,6 +19,14 @@ tableau20 <- c('#4E79A7', # Blue
                '#9D7660', # Brown
                '#D7B5A6') # Light Orange)
 
+# Find ranges
+find_ranges <- function(x, y1, y2) {
+  x <- c(min(x), max(x))
+  y <- c(min(min(y1), min(y2)),
+         max(max(y1), max(y2)))
+  return(list(x = x, y = y))
+}
+
 # Plot path
 # Function for plotting path between two distributions
 plot_path <- function(x, p_x, p_x_tilde, ranges, epsilon = seq(0, 1, 0.1)) {

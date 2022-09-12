@@ -195,7 +195,7 @@ shinyServer(function(session, input, output) {
   ## Current DGP
   output$currentDgpText <- renderUI({
     req(dgps$dgp_string)
-    str <- "Current settings:"
+    str <- "DGP:"
     str <- append(str, dgps$dgp_string)
     HTML(paste(str, collapse = "<br/>"))
     
@@ -228,20 +228,20 @@ shinyServer(function(session, input, output) {
         
     str <- ""
     if (input$estimator == "mean") {
-      str <- append(str, sprintf("Sample mean =  %.6f<br/>True mean = %.6f", x_bar, mean_true))
+      str <- append(str, sprintf("Sample mean <br/>  %.6f<br/>True mean = %.6f", x_bar, mean_true))
     }
     else if (input$estimator == "avg_den") {
-      str <- append(str, sprintf("True avg density = %.6f", avg_den_true))
+      str <- append(str, sprintf("True avg density <br/> %.6f", avg_den_true))
     }
-    str <- append(str, paste0("T(P) (sample) = ", sprintf("%.6f", t_true)))
-    str <- append(str, paste0("T(P_tilde) = ", sprintf("%.6f", t_est)))
-    str <- append(str, paste0("T_one-step = ", sprintf("%.6f", t_one_step)))
-    str <- append(str, paste0("T_one-step^k-fold = ", sprintf("%.6f", t_one_step_k_fold)))
-    str <- append(str, paste0("IF = ", sprintf("%.6f", if_val)))
-    str <- append(str, paste0("IF_k-fold = ", sprintf("%.6f", if_val_k_fold)))
-    str <- append(str, paste0("|T(P) - T(P_tilde)| = ", sprintf("%.3e", 
+    str <- append(str, paste0("T(P) (sample) <br/> ", sprintf("%.6f", t_true)))
+    str <- append(str, paste0("T(P_tilde) <br/> ", sprintf("%.6f", t_est)))
+    str <- append(str, paste0("T_one-step <br/> ", sprintf("%.6f", t_one_step)))
+    str <- append(str, paste0("T_one-step^k-fold <br/> ", sprintf("%.6f", t_one_step_k_fold)))
+    str <- append(str, paste0("IF <br/> ", sprintf("%.6f", if_val)))
+    str <- append(str, paste0("IF_k-fold <br/> ", sprintf("%.6f", if_val_k_fold)))
+    str <- append(str, paste0("|T(P) - T(P_tilde)| <br/> ", sprintf("%.3e", 
                                                         diff_true_est)))
-    str <- append(str, paste0("|T(P) - T_one-step| = ", sprintf("%.3e", 
+    str <- append(str, paste0("|T(P) - T_one-step| <br/> ", sprintf("%.3e", 
                                                          diff_true_one_step)))
     
     HTML(paste(str, collapse = "<br/>"))

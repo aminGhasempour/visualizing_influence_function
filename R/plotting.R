@@ -1,4 +1,5 @@
 library(scales)
+# TODO: Replace with ggplot? 
 
 # Tableau 20 colorscheme
 tableau20 <- c('#4E79A7', # Blue
@@ -48,6 +49,10 @@ plot_path <- function(x, p_x, p_x_tilde, ranges, epsilon = seq(0, 1, 0.1)) {
   lines(x, p_x_tilde, col = col2, lwd = 2)
   lgnd <- c("p_x", "P~")
   col_lab <- c(col1, col2)
+  legend("topright",                    # Add legend to plot
+         legend = c("True", "Estimated"),
+         col = c(col1, col2),
+         lty = c(1, 1))
   
   # Plotting the path, \mathcal{P}_\epsilon
   trans <- div_gradient_pal(col1, high = col2, space = "Lab")

@@ -43,6 +43,7 @@ body <- dashboardBody(
   ),
   
   # Tabs
+  # TODO: Add the approximated distribution to the histogram.
   tabItems(
     tabItem("tabDataGeneration",
       fluidRow(
@@ -62,7 +63,7 @@ body <- dashboardBody(
                       max = 3, value = 1, step = 0.1)
         ),
         
-        box(title = "Generate sample", status = "warning", width = 4,
+        box(title = "Mixing", status = "warning", width = 4,
           sliderInput("sliderDistributionMix", 
                       "Mixing coefficient for data generation", min = 0, 
                       max = 1, value = 0.5, step = 0.1),

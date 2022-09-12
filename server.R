@@ -10,7 +10,6 @@
 library(shiny)
 source("R/dgps.R")
 source("R/estimators.R")
-source("R/k_fold_cross_validation.R")
 source("R/plotting.R")
 source("R/color_cycles.R")
 
@@ -39,7 +38,7 @@ shinyServer(function(session, input, output) {
   
   ## Influence functions
   # TODO: Rewrite so it is based on a history instead.
-  ifs <- reactiveValues(mean = NULL, avg_den = NULL, ate = NULL, k_fold = NULL)
+  ifs <- reactiveValues(mean = NULL, avg_den = NULL, ate = NULL)
   
   # Functions
   # Observes
@@ -86,9 +85,6 @@ shinyServer(function(session, input, output) {
     ifs$mean <- tmp$ifs$mean
     estimators$avg_den <- tmp$estimators$avg_den
     ifs$avg_den <- tmp$ifs$avg_den
-    
-    # k-fold cross validation
-    ifs$k_fold <- k_fold_cross_fitting(data$x)
     
     # Set plot ranges
     path_plot_ranges$ranges <- set_initial_plot_ranges()
@@ -156,14 +152,11 @@ shinyServer(function(session, input, output) {
     
     # Calculating one step
     if_val <- ifs[[input$estimator]]
-    if_val_k_fold <- ifs$k_fold[[input$estimator]]
     t_one_step <- tail(estimators[[input$estimator]], 1) + ifs[[input$estimator]]
-    t_one_step_k_fold <- tail(estimators[[input$estimator]], 1) + ifs$k_fold[[input$estimator]]
     
     plot_curve(x = x,
                y = estimators[[input$estimator]], 
                one_step = t_one_step,
-               k_fold = t_one_step_k_fold, 
                legend_pos = input$ifLegendPos,
                xlbl = xlbl,
                ylbl = input$estimator)
@@ -220,9 +213,7 @@ shinyServer(function(session, input, output) {
     t_est <- tail(estimators[[input$estimator]], 1)
     t_true <- head(estimators[[input$estimator]], 1)
     if_val <- ifs[[input$estimator]]
-    if_val_k_fold <- ifs$k_fold[[input$estimator]]
     t_one_step <- tail(estimators[[input$estimator]], 1) + ifs[[input$estimator]]
-    t_one_step_k_fold <- tail(estimators[[input$estimator]], 1) + ifs$k_fold[[input$estimator]]
     diff_true_est <- abs(t_est - t_true)
     diff_true_one_step <- abs(t_one_step - t_true)
         
@@ -236,9 +227,7 @@ shinyServer(function(session, input, output) {
     str <- append(str, paste0("T(P) (sample) <br/> ", sprintf("%.6f", t_true)))
     str <- append(str, paste0("T(P_tilde) <br/> ", sprintf("%.6f", t_est)))
     str <- append(str, paste0("T_one-step <br/> ", sprintf("%.6f", t_one_step)))
-    str <- append(str, paste0("T_one-step^k-fold <br/> ", sprintf("%.6f", t_one_step_k_fold)))
     str <- append(str, paste0("IF <br/> ", sprintf("%.6f", if_val)))
-    str <- append(str, paste0("IF_k-fold <br/> ", sprintf("%.6f", if_val_k_fold)))
     str <- append(str, paste0("|T(P) - T(P_tilde)| <br/> ", sprintf("%.3e", 
                                                         diff_true_est)))
     str <- append(str, paste0("|T(P) - T_one-step| <br/> ", sprintf("%.3e", 

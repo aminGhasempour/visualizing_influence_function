@@ -110,7 +110,7 @@ plot_curve <- function(x, y, one_step, legend_pos, ylbl, xlbl="epsilon") {
         lwd=2,
         lty=2)
   
-  legend("right",
+  legend("top",
          legend = c("True curve", "One-step"),  # Legend texts
          col = c(col1, col2),
          lty=c(1,2),

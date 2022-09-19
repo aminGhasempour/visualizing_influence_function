@@ -19,10 +19,10 @@ if_avg_den <- function(x, p_x) {
 }
 
 # To be implemented
-# T_covariance <- function() {
+# estimator_covariance <- function() {
 #   
 # }
-# IF_covariance <- function() {
+# if_covariance <- function() {
 #   
 # }
 # 

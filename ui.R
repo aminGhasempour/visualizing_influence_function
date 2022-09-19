@@ -69,10 +69,7 @@ body <- dashboardBody(
                       max = 1, value = 0.5, step = 0.1),
           
           sliderInput("sampleSize", "Sample size", min = 10, max = 1000, 
-                      value = 100, step = 10),
-          
-          sliderInput("sliderEpsMesh", "Epsilon mesh (path granularity)", 
-                      min = 0.001, max = 0.1, value = 0.01, step = 0.001),
+                      value = 40, step = 10),
           
           htmlOutput("currentDgpText")
           
@@ -96,7 +93,7 @@ body <- dashboardBody(
       ),
       
       fluidRow(
-        box(title = "Info", status = "primary", width = 3,
+        box(title = "Values", status = "primary", width = 3,
           htmlOutput("estimatorAndIfText")
         ),
           

@@ -61,14 +61,13 @@ shinyServer(function(session, input, output) {
   observeEvent(input$generateButton, {
     req(dgps$dgp$dmix, dgps$dgp$rmix)
     
-    showModal(modalDialog("Generating data and calculating estimators and  influence functions...", 
+    showModal(modalDialog("Generating data, calculating estimators and influence functions...", 
                           footer=NULL))
     
     # Generating data
     data$data <- generate_data(input$sampleSize, dgps$dgp$dmix, dgps$dgp$rmix)
     # Setting epsilon mesh
-    # TODO: Remove this slider
-    data$data$eps <- seq(0, 1, by = input$sliderEpsMesh)
+    data$data$eps <- seq(0, 1, by = 0.001)
     
     # Storing the distribution that generated the data and string describing it
     dgps$history <- append(dgps$history, dgps$dgp)

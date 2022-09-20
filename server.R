@@ -106,6 +106,54 @@ shinyServer(function(session, input, output) {
               path_plot_ranges$ranges)
   })
   
+  ## Choose Estimation plot
+  output$EstPlot <- renderPlot({
+    #req(data$data$eps, data$data$p_x, data$data$p_x_tilde)
+    if (input$Onestep == 'ifPlot'){
+      if (input$checkboxDistDist) {
+        x <- data$data$ddistances
+        xlbl <- "Distribution distance"
+      }
+      else {
+        x <- data$data$eps
+        xlbl <- "Path along epsilon/t"
+      }
+      
+      # Calculating one step
+      if_val <- ifs[[input$estimator]]
+      t_one_step <- tail(estimators[[input$estimator]], 1) + ifs[[input$estimator]]
+      
+      plot_curve(x = x,
+                 y = estimators[[input$estimator]], 
+                 one_step = t_one_step,
+                 legend_pos = input$ifLegendPos,
+                 xlbl = xlbl,
+                 ylbl = input$estimator)
+    } else if (input$Onestep == 'ndPlot'){
+      if (input$checkboxDistDist) {
+        x <- data$data$ddistances
+        xlbl <- "Distribution distance"
+      }
+      else {
+        x <- data$data$eps
+        xlbl <- "Path along epsilon/t"
+      }
+      
+      # Calculating numerical derivative
+      t <- estimators[[input$estimator]]
+      dydx <- (tail(t, 2)[1] - tail(t, 1)) / 
+        (tail(data$data$eps, 2)[1] - tail(data$data$eps, 1))
+      one_step <- tail(t, 1) - dydx
+      
+      plot_curve(x, 
+                 t, 
+                 one_step, 
+                 legend_pos = input$ndLegendPos, 
+                 xlbl = xlbl,
+                 ylbl = input$estimator)
+    }
+  })
+  
   ## Numerical derivative
   output$ndPlot <- renderPlot({
     #req(data$data$eps, data$data$p_x, data$data$p_x_tilde)

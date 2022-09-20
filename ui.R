@@ -96,15 +96,16 @@ body <- dashboardBody(
         box(title = "Values", status = "primary", width = 3,
           htmlOutput("estimatorAndIfText")
         ),
-          
-        tabBox(title = "One-step estimator", 
-               width = 9,
-               tabPanel("IF based",
-                 plotOutput("ifPlot")
-               ),
-               tabPanel("Numerical derivative based",
-                  plotOutput("ndPlot")
-               )
+        
+        box(title = "One-step Estimator", status = "primary", width = 9,
+            radioButtons(
+              'Onestep',
+              'Estimator:',
+              c("IF based" = "ifPlot",
+                "Numerical derivative based" = "ndPlot"
+                
+              )
+            ),plotOutput("EstPlot")
         )
       )
     )

@@ -1,12 +1,6 @@
 estimator_mean <- function(x, p_x) {
-<<<<<<< HEAD:R/estimators_and_ifs.R
-  avg <- function(x){x * p_x(x)}
-  return(integrate(avg, min(x), max(x))$value)
-  
-=======
   avg <- function (x) { x * p_x(x) }
   return(integrate(avg, min(x), max(x))$value)
->>>>>>> 89126f763d073b52a77254184ea78a50cdf2aac4:R/estimators.R
 }
 if_mean <- function(x, p_x) {
   estimator_val <- estimator_mean(x, p_x)

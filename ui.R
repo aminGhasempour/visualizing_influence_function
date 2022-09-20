@@ -17,8 +17,7 @@ sidebar <- dashboardSidebar(
   sidebarMenu(
     menuItem("Data generation", tabName = "tabDataGeneration", icon = icon("th")),
     menuItem("Influence functions", tabName = "tabInfluenceFunctions", 
-             icon = icon("th")),
-    actionButton(inputId = "generateButton", label = "Generate data")
+             icon = icon("th"))
   )
 )
 
@@ -26,8 +25,8 @@ body <- dashboardBody(
   
   # Main row, always showing
   fluidRow(
-    box(title = "Histogram over data", status = "primary", 
-      plotOutput("dataHistPlot")
+    box(title = "Sample histogram", status = "primary", 
+      plotOutput("dataHistPlot"),
     ),
     
     box(title = "Distribution path", status = "primary", 
@@ -36,9 +35,23 @@ body <- dashboardBody(
         dblclick = "plot1_dblclick",
         brush = brushOpts(id = "plot1_brush",
                           resetOnNew = TRUE)
-      ),
-      
-      htmlOutput("dataDgpText"),
+      )
+    ),
+    
+    box(title = "Sample", status = "primary", 
+        htmlOutput("dataDgpText")
+    ),
+    
+    box(title = "Generate data", status = "primary", 
+        column(width = 8,
+          sliderInput("sampleSize", "Sample size", min = 10, max = 1000, 
+                      value = 40, step = 10),
+          htmlOutput("currentDgpText")
+        ),
+        
+        column(width = 4,
+          actionButton(inputId = "generateButton", label = "Generate data")
+        )
     ),
   ),
   
@@ -68,10 +81,6 @@ body <- dashboardBody(
                       "Mixing coefficient for data generation", min = 0, 
                       max = 1, value = 0.5, step = 0.1),
           
-          sliderInput("sampleSize", "Sample size", min = 10, max = 1000, 
-                      value = 40, step = 10),
-          
-          htmlOutput("currentDgpText")
           
         )
       )
@@ -79,7 +88,7 @@ body <- dashboardBody(
     
     tabItem("tabInfluenceFunctions",
       fluidRow(
-        box(title = "Select parameter to estimate", status = "warning", width = 12,
+        box(title = "Select parameter", status = "warning", width = 12,
           selectInput(
             inputId = "estimator",
             label = "Select parameter",
@@ -87,7 +96,7 @@ body <- dashboardBody(
           ), 
           
           checkboxInput("checkboxDistDist", "Distribution distance", 
-                        value = TRUE)
+                        value = FALSE)
           
         )
       ),

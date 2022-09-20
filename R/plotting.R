@@ -1,4 +1,5 @@
 library(scales)
+# TODO: Replace with ggplot? 
 
 # Tableau 20 colorscheme
 tableau20 <- c('#4E79A7', # Blue
@@ -18,6 +19,14 @@ tableau20 <- c('#4E79A7', # Blue
                '#D4A6C8', # Light Purple
                '#9D7660', # Brown
                '#D7B5A6') # Light Orange)
+
+# Find ranges
+find_ranges <- function(x, y1, y2) {
+  x <- c(min(x), max(x))
+  y <- c(min(min(y1), min(y2)),
+         max(max(y1), max(y2)))
+  return(list(x = x, y = y))
+}
 
 # Plot path
 # Function for plotting path between two distributions
@@ -40,6 +49,10 @@ plot_path <- function(x, p_x, p_x_tilde, ranges, epsilon = seq(0, 1, 0.1)) {
   lines(x, p_x_tilde, col = col2, lwd = 2)
   lgnd <- c("p_x", "P~")
   col_lab <- c(col1, col2)
+  legend("topright",                    # Add legend to plot
+         legend = c("True", "Estimated"),
+         col = c(col1, col2),
+         lty = c(1, 1))
   
   # Plotting the path, \mathcal{P}_\epsilon
   trans <- div_gradient_pal(col1, high = col2, space = "Lab")
@@ -62,12 +75,14 @@ plot_curve <- function(x, y, one_step, legend_pos, ylbl, xlbl="epsilon") {
   # col1: true curve, col2: linear approximation
   col1 = tableau20[1]
   col2 = tableau20[5]
+  col3 = tableau20[6]
   
   # Plot the true curve
   plot(x, y,
        type="l",
        col=col1,
        lwd=2,
+       lty=1,
        ylab=ylbl,
        xlab=xlbl,
        xlim=c(min(x) - 0.005 * max(x), max(x) + 0.005 * max(x)),
@@ -78,11 +93,12 @@ plot_curve <- function(x, y, one_step, legend_pos, ylbl, xlbl="epsilon") {
   # Show y ticks at the three relevant places
   axis(2,
        at = c(tail(y, 1), one_step, head(y, 1)),
-       labels = round(c(tail(y, 1), one_step, head(y, 1)), digits=3))
+       labels = round(c(tail(y, 1), one_step, head(y, 1)), digits=3), 
+       las=1)
   
   # Plot points at T(P) and T(P~)
-  points(c(min(x), max(x)), 
-         c(y[1], tail(y, 1)),
+  points(c(max(x)), 
+         c(tail(y, 1)),
          col=col1,
          pch=19,
          cex=2)
@@ -94,17 +110,10 @@ plot_curve <- function(x, y, one_step, legend_pos, ylbl, xlbl="epsilon") {
         lwd=2,
         lty=2)
   
-  # Plot points at T(P) and T(P~)
-  points(c(min(x), max(x)), 
-         c(one_step, tail(y, 1)), 
-         col = col2,
-         pch=20,
-         cex=2)
+  legend("top",
+         legend = c("True curve", "One-step"),  # Legend texts
+         col = c(col1, col2),
+         lty=c(1,2),
+         lwd=2 )
   
-  #legend(legend_pos,          # Position
-  #       legend = c("Curve T(P~) -> T(P)", "1-step approximation"),  # Legend texts
-  #       col = c(col1, col2),
-  #       lty=c(1,2),
-  #       lwd=2
-  #)
 }

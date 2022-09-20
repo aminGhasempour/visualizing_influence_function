@@ -5,9 +5,9 @@ account: fileds
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 6316993
-bundleId: 5914372
+bundleId: 5926857
 url: https://fileds.shinyapps.io/visualizing_influence_function/
-when: 1652778789.75566
-lastSyncTime: 1652778789.75567
+when: 1653051473.83771
+lastSyncTime: 1653051473.83773
 asMultiple: FALSE
 asStatic: FALSE

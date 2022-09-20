@@ -1,11 +1,16 @@
 estimator_mean <- function(x, p_x) {
+<<<<<<< HEAD:R/estimators_and_ifs.R
   avg <- function(x){x * p_x(x)}
   return(integrate(avg, min(x), max(x))$value)
   
+=======
+  avg <- function (x) { x * p_x(x) }
+  return(integrate(avg, min(x), max(x))$value)
+>>>>>>> 89126f763d073b52a77254184ea78a50cdf2aac4:R/estimators.R
 }
 if_mean <- function(x, p_x) {
   estimator_val <- estimator_mean(x, p_x)
-  if_val <- p_x(x) - estimator_val
+  if_val <- x - estimator_val
   return(mean(if_val))
 }
 
@@ -20,10 +25,10 @@ if_avg_den <- function(x, p_x) {
 }
 
 # To be implemented
-# T_covariance <- function() {
+# estimator_covariance <- function() {
 #   
 # }
-# IF_covariance <- function() {
+# if_covariance <- function() {
 #   
 # }
 # 
@@ -51,21 +56,23 @@ calculate_estimator_along_path <- function(x_linspace, estimator, eps, dpath) {
   return(t_eps)
 }
 
-calculate_estimators_and_ifs <- function(x_linspace, eps, dnorm_mix, dtilde, 
+# TODO: Separate calculation of influence function from this loop
+calculate_estimators_and_ifs <- function(x, eps, dnorm_mix, dtilde, 
                                          dpath) {
   # Values of densities along epsilon path
   p_eps <- list()
   # Distribution distances
   ddistances <- c()
   for (ep in eps) {
-    p_eps <- append(p_eps, dpath(x_linspace, ep))
+    p_eps <- append(p_eps, dpath(x, ep))
     
     dist_fun <- function(x) { (dnorm_mix(x) - dpath(x, ep))^2 }
-    dist <- integrate(dist_fun, min(x_linspace), max(x_linspace))$value
+    dist <- integrate(dist_fun, min(x), max(x))$value
     ddistances <- append(ddistances, dist)
   }
   
   # Calculating estimators and influence functions
+  x_linspace <- seq(min(x), max(x), length.out=1000)
   estimator_values <- list()
   if_values <- list()
   for (tn in names(estimators)) {
@@ -74,7 +81,7 @@ calculate_estimators_and_ifs <- function(x_linspace, eps, dnorm_mix, dtilde,
                                             dpath)
     estimator_values[[tn]] <- t_val
     
-    if_values[[tn]] <- t$ifn(x_linspace, dtilde)
+    if_values[[tn]] <- t$ifn(x, dtilde)
   }
   
   return(list(ddistances = ddistances,

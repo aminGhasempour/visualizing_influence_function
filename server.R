@@ -9,8 +9,8 @@
 
 library(shiny)
 source("R/dgps.R")
-source("R/estimators_and_ifs.R")
-source("R/plotting_functions.R")
+source("R/estimators.R")
+source("R/plotting.R")
 source("R/color_cycles.R")
 
 set.seed(42)
@@ -21,91 +21,72 @@ shinyServer(function(session, input, output) {
   
   # Reactive values
   ## Data generating process'
-  dgps <- reactiveValues(dnorm_mix = NULL,
-                         rnorm_mix = NULL)
+  # TODO: Rewrite so it is based on a history instead?
+  dgps <- reactiveValues(dgp = NULL,
+                         dgp_string = NULL,
+                         history = list(),
+                         string_history = list())
   
   ## Data
-  data <- reactiveValues(x = NULL,
-                         x_linspace = NULL,
-                         eps = NULL,
-                         ddistances = NULL,
-                         p_x = NULL,
-                         p_x_tilde = NULL,
-                         dtilde = NULL,
-                         dpath = NULL,
-                         dmix_string = NULL)
+  # TODO: Rewrite so it is based on a history instead.
+  data <- reactiveValues(data = NULL,
+                         history = list())
   
   ## Estimators
-  estimators <- reactiveValues(mean = NULL, avg_den = NULL,  ate = NULL)
+  # TODO: Rewrite so it is based on a history instead.
+  estimators <- reactiveValues(mean = NULL, avg_den = NULL, ate = NULL)
   
   ## Influence functions
+  # TODO: Rewrite so it is based on a history instead.
   ifs <- reactiveValues(mean = NULL, avg_den = NULL, ate = NULL)
   
   # Functions
-  dmix_string_generator <- function() {
-    req(data$x)
-    mu_a <- input$sliderMeanDistA
-    std_a <- input$sliderStdDistA
-    mu_b <- input$sliderMeanDistB
-    std_b <- input$sliderStdDistB
-    m <- input$sliderDistributionMix
-        
-    str <- paste0("P = ", m, " * N(", mu_a, ", ", std_a, ") + (1 - ", m, ") * N(", mu_b, 
-                   ", ", std_b, ")")
-    
-    return(str)
-  }
-  
   # Observes
-  ## Set DGPS
+  ## Observe changes in the DGP
   observe({
-    mean_a <- input$sliderMeanDistA
-    std_a <- input$sliderStdDistA
-    mean_b <- input$sliderMeanDistB
-    std_b <- input$sliderStdDistB
-    d_mix <- input$sliderDistributionMix
-    
-    dgps$dnorm_mix <-  function(x) {
-      d_mix * dnorm(x, mean_a, std_a) + (1 - d_mix) * dnorm(x, mean_b, std_b)
-    }
-    dgps$rnorm_mix <-  function(n) {
-      d_mix * rnorm(n, mean_a, std_a) + (1 - d_mix) * rnorm(n, mean_b, std_b)
-    }
+    # Create DGP
+    dgps$dgp <- generate_dgp(input$sliderMeanDistA, input$sliderStdDistA, 
+                             input$sliderMeanDistB, input$sliderStdDistB,
+                             input$sliderDistributionMix)
+    # Create string describing DGP
+    dgps$dgp_string <- generate_dmix_string(input$sliderMeanDistA, 
+                                            input$sliderStdDistA, 
+                                            input$sliderMeanDistB, 
+                                            input$sliderStdDistB, 
+                                            input$sliderDistributionMix)
   })
   
   
   ## Generate data, calculate estimators and influence functions
   observeEvent(input$generateButton, {
-    req(dgps$dnorm_mix, dgps$rnorm_mix)
+    req(dgps$dgp$dmix, dgps$dgp$rmix)
     
-    showModal(modalDialog("Generating data and calculating influence functions...", 
+    showModal(modalDialog("Generating data, calculating estimators and influence functions...", 
                           footer=NULL))
     
+    # Generating data
+    data$data <- generate_data(input$sampleSize, dgps$dgp$dmix, dgps$dgp$rmix)
     # Setting epsilon mesh
-    data$eps <- seq(0, 1, by = input$sliderEpsMesh)
+    data$data$eps <- seq(0, 1, by = 0.001)
     
-    # Generating data and distributions
-    tmp <- dgp(input$sampleSize, dgps$dnorm_mix, dgps$rnorm_mix)
-    
-    # Storing in reactive variable
-    data$x <- tmp$x
-    data$x_linspace <- tmp$x_linspace
-    data$p_x <- tmp$p_x
-    data$p_x_tilde <- tmp$p_x_tilde
-    data$dtilde <- tmp$dtilde
-    data$dpath <- tmp$dpath
-    data$dmix_string <- dmix_string_generator()
+    # Storing the distribution that generated the data and string describing it
+    dgps$history <- append(dgps$history, dgps$dgp)
+    dgps$string_history <- append(dgps$string_history, dgps$dgp_string)
     
     # Calculating estimators and influence functions
-    tmp <- calculate_estimators_and_ifs(data$x, data$eps, 
-                                        dgps$dnorm_mix, data$dtilde, data$dpath)
+    tmp <- calculate_estimators_and_ifs(data$data$x, data$data$eps, 
+                                        dgps$dgp$dmix, data$data$dtilde, 
+                                        data$data$dpath)
     
     # Storing in reactive variables
-    data$ddistances <- tmp$ddistances
+    data$data$ddistances <- tmp$ddistances
     estimators$mean <- tmp$estimators$mean
     ifs$mean <- tmp$ifs$mean
     estimators$avg_den <- tmp$estimators$avg_den
     ifs$avg_den <- tmp$ifs$avg_den
+    
+    # Set plot ranges
+    path_plot_ranges$ranges <- set_initial_plot_ranges()
     
     removeModal()
   })
@@ -113,34 +94,35 @@ shinyServer(function(session, input, output) {
   # Plotting
   ## Data histogram
   output$dataHistPlot <- renderPlot({
-    req(data$x)
-    hist(data$x, main = "", xlab = "")
+    req(data$data$x)
+    hist(data$data$x, main = "", xlab = "")
   })
   
   ## Path plot
   output$pathPlot <- renderPlot({
-    req(data$x, data$p_x, data$p_x_tilde)
+    req(data$data$x, data$data$p_x, data$data$p_x_tilde)
     
-    plot_path(data$x_linspace, data$p_x, data$p_x_tilde, path_plot_ranges)
+    plot_path(data$data$x_linspace, data$data$p_x, data$data$p_x_tilde, 
+              path_plot_ranges$ranges)
   })
   
   ## Numerical derivative
   output$ndPlot <- renderPlot({
-    req(data$eps, data$p_x, data$p_x_tilde)
+    #req(data$data$eps, data$data$p_x, data$data$p_x_tilde)
     
     if (input$checkboxDistDist) {
-      x <- data$ddistances
+      x <- data$data$ddistances
       xlbl <- "Distribution distance"
     }
     else {
-      x <- data$eps
-      xlbl <- "Epsilon"
+      x <- data$data$eps
+      xlbl <- "Path along epsilon/t"
     }
     
     # Calculating numerical derivative
     t <- estimators[[input$estimator]]
     dydx <- (tail(t, 2)[1] - tail(t, 1)) / 
-             (tail(data$eps, 2)[1] - tail(data$eps, 1))
+             (tail(data$data$eps, 2)[1] - tail(data$data$eps, 1))
     one_step <- tail(t, 1) - dydx
     
     plot_curve(x, 
@@ -153,26 +135,27 @@ shinyServer(function(session, input, output) {
   
   
   ## Influence function
+  # TODO: Add history so to show all generated samples for the same DGP. Reset 
+  # when DGP is changed.
   output$ifPlot <- renderPlot({
-    req(data$eps, data$p_x, data$p_x_tilde)
+    #req(data$data$eps, data$data$p_x, data$data$p_x_tilde)
     
     if (input$checkboxDistDist) {
-      x <- data$ddistances
+      x <- data$data$ddistances
       xlbl <- "Distribution distance"
     }
     else {
-      x <- data$eps
-      xlbl <- "Epsilon"
+      x <- data$data$eps
+      xlbl <- "Path along epsilon/t"
     }
     
     # Calculating one step
-    t <- estimators[[input$estimator]]
     if_val <- ifs[[input$estimator]]
-    one_step <- tail(t, 1) + if_val
+    t_one_step <- tail(estimators[[input$estimator]], 1) + ifs[[input$estimator]]
     
-    plot_curve(x,
-               estimators[[input$estimator]], 
-               one_step, 
+    plot_curve(x = x,
+               y = estimators[[input$estimator]], 
+               one_step = t_one_step,
                legend_pos = input$ifLegendPos,
                xlbl = xlbl,
                ylbl = input$estimator)
@@ -180,42 +163,52 @@ shinyServer(function(session, input, output) {
   
   # Brush handlers
   ## Path plot ranges
-  path_plot_ranges <- reactiveValues(x = NULL, y = NULL)
+  path_plot_ranges <- reactiveValues(ranges = list(x = NULL, y = NULL))
+  
+  set_initial_plot_ranges <- reactive({
+    req(data$data$x, data$data$p_x)
+    return(find_ranges(data$data$x, data$data$p_x, data$data$p_x_tilde))
+  })
   
   observeEvent(input$plot1_dblclick, {
-    req(data$x, data$p_x, data$p_x_tilde)
+    req(data$data$x, data$data$p_x, data$data$p_x_tilde)
     
     brush <- input$plot1_brush
     if (!is.null(brush)) {
-      path_plot_ranges$x <- c(brush$xmin, brush$xmax)
-      path_plot_ranges$y <- c(brush$ymin, brush$ymax)
+      path_plot_ranges$ranges$x <- c(brush$xmin, brush$xmax)
+      path_plot_ranges$ranges$y <- c(brush$ymin, brush$ymax)
       
     } else {
-      path_plot_ranges$x <- c(min(data$x), max(data$x))
-      path_plot_ranges$y <- c(min(min(data$p_x), min(data$p_x_tilde)),
-                            max(max(data$p_x), max(data$p_x_tilde)))
+      path_plot_ranges$ranges <- set_initial_plot_ranges()
     }
   })
   
   # Text output
   ## Current DGP
   output$currentDgpText <- renderUI({
-    str1 <- "Current settings:"
-    str2 <- dmix_string_generator()
-    HTML(paste(str1, str2, sep = "<br/>"))
+    req(dgps$dgp_string)
+    str <- "DGP:"
+    str <- append(str, dgps$dgp_string)
+    HTML(paste(str, collapse = "<br/>"))
     
   })
   
   ## Data DGP
   output$dataDgpText <- renderUI({
-    req(data$dmix_string)
-    str1 <- "Data generated by:"
-    str2 <- data$dmix_string
-    HTML(paste(str1, str2, sep = "<br/>"))
+    req(length(dgps$string_history) > 0)
+    str <- "Data generated by:"
+    str <- append(str, dgps$dgp_string)
+    #str <- append(str, dgps$string_history(length(dgps$string_history)))
+    HTML(paste(str, collapse = "<br/>"))
   })
   
   ## Estimator and IF
   output$estimatorAndIfText <- renderUI({
+    x_bar <- mean(data$data$x)
+    mean_fun <- function(x) { x * dgps$dgp$dmix(x) }
+    mean_true <- integrate(mean_fun, -1000, 1000)$value
+    avg_den_fun <- function(x) { dgps$dgp$dmix(x)^2 }
+    avg_den_true <- integrate(avg_den_fun, -1000, 1000)$value
     t_est <- tail(estimators[[input$estimator]], 1)
     t_true <- head(estimators[[input$estimator]], 1)
     if_val <- ifs[[input$estimator]]
@@ -223,16 +216,23 @@ shinyServer(function(session, input, output) {
     diff_true_est <- abs(t_est - t_true)
     diff_true_one_step <- abs(t_one_step - t_true)
         
-    str1 <- paste0("Estimator value: ", sprintf("%.6f", t_est))
-    str2 <- paste0("True estimator value: ", sprintf("%.6f", t_true))
-    str3 <- paste0("IF value: ", sprintf("%.6f", if_val))
-    str4 <- paste0("One-step value: ", sprintf("%.6f", t_one_step))
-    str5 <- paste0("Difference true/estimate: ", sprintf("%.3e", 
-                                                         diff_true_est))
-    str6 <- paste0("Difference true/one-step: ", sprintf("%.3e", 
-                                                         diff_true_one_step))
+    str <- ""
+    if (input$estimator == "mean") {
+      str <- append(str, sprintf("Sample mean <br/>  %.6f<br/>True mean = %.6f", x_bar, mean_true))
+    }
+    else if (input$estimator == "avg_den") {
+      str <- append(str, sprintf("True avg density <br/> %.6f", avg_den_true))
+    }
+    str <- append(str, paste0("T(P) (sample) <br/> ", sprintf("%.6f", t_true)))
+    str <- append(str, paste0("T(P_tilde) <br/> ", sprintf("%.6f", t_est)))
+    str <- append(str, paste0("T_one-step <br/> ", sprintf("%.6f", t_one_step)))
+    str <- append(str, paste0("IF <br/> ", sprintf("%.6f", if_val)))
+    str <- append(str, paste0("|T(P) - T(P_tilde)| <br/> ", sprintf("%.3e", 
+                                                        diff_true_est)))
+    str <- append(str, paste0("|T(P) - T_one-step| <br/> ", sprintf("%.3e", 
+                                                         diff_true_one_step)))
     
-    HTML(paste(str1, str2, str3, str4, str5, sep = "<br/>"))
+    HTML(paste(str, collapse = "<br/>"))
   })
   
 
